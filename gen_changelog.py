@@ -6,6 +6,8 @@ from git import Repo, exc
 from github import Github
 import os
 import sys
+from urllib.request import urlretrieve
+from zipfile import ZipFile
 
 upload_changelog = True
 
@@ -79,3 +81,25 @@ if upload_changelog:
     print('New release body: {}'.format(gh_body))
     gh_release.update_release(gh_release.tag_name, gh_body, draft=True, prerelease=True,
                               tag_name=gh_release.tag_name, target_commitish=gh_release.target_commitish)
+    # Download .elf files
+    print('Downloading .elf debug files')
+    elf_assets = []
+    elf_filenames = []
+    for asset in gh_release.get_assets():
+        if asset.name.endswith('.elf'):
+            elf_assets.append(asset)
+            elf_filenames.append(asset.name)
+            print('Fetching {} from {}...'.format(asset.name, asset.browser_download_url))
+            urlretrieve(asset.browser_download_url, asset.name)
+    print('Adding elf files to archive')
+    with ZipFile('debug_symbols.zip', 'w') as dbgzip:
+        for elf in elf_filenames:
+            print('Adding {}...'.format(elf))
+            dbgzip.write(elf)
+    print('Uploading debug symbols')
+    gh_release.upload_asset('debug_symbols.zip', 'Debug symbols')
+    print('Removing elf files from release')
+    for asset in elf_assets:
+        print('Removing {}...'.format(asset.name))
+        asset.delete_asset()
+    print('Done.')
