@@ -177,9 +177,9 @@ bool FlightTaskOffboard::update()
 	}
 
 	// if nothing is valid in z, then exit offboard
-	if (!(position_ctrl_z || velocity_ctrl_z || acceleration_ctrl)) {
-		return false;
-	}
+	// if (!(position_ctrl_z || velocity_ctrl_z || acceleration_ctrl)) {
+	// 	return false;
+	// }
 
 	// XY-direction
 	if (feedforward_ctrl_xy) {
